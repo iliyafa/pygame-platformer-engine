@@ -1,3 +1,5 @@
+from enum import Enum, auto
+
 # Colors:
 Color = {
     "Blue"  : [0, 5, 141],
