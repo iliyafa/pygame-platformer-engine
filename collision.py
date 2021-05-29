@@ -1,7 +1,7 @@
 from util import sign
 from consts import Sides
 
-TOLERANCE = 15
+TOLERANCE = 20
 
 class Collision(object):
     def __init__(self, source, dest):
@@ -24,13 +24,13 @@ class Collision(object):
     #     return False
 
     def determine_side(self):
-        if abs(self.source.bottom - self.dest.top) < TOLERANCE:
+        if (self.source.bottom - self.dest.top) < self.dest.height/2:
             return Sides.BOTTOM
-        elif abs(self.dest.bottom - self.source.top) < TOLERANCE:
+        elif (self.dest.bottom - self.source.top) < self.dest.height/2:
             return Sides.TOP
-        elif abs(self.source.right - self.dest.left) < TOLERANCE:
+        elif (self.source.right - self.dest.left) < self.dest.width/2:
             return Sides.RIGHT
-        elif abs(self.dest.left - self.source.right) < TOLERANCE:
+        elif (self.dest.left - self.source.right) < self.dest.width/2:
             return Sides.LEFT
         else:
             return Sides.UNKNOWN

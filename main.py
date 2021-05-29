@@ -111,11 +111,20 @@ class Player(Drawable):
             if colliding_sides[Sides.RIGHT] is not None:
                 obj = colliding_sides[Sides.RIGHT].dest
                 self.can_move['right'] = False
-                self._x = obj.left - self.width
-                if self.velocity.x > 0:
-                    self.velocity.x = 0
+                self._x = obj.left - self.width + 1
+                # if self.velocity.x > 0:
+                self.velocity.x = 0
             else:
                 self.can_move['right'] = True
+            
+            if colliding_sides[Sides.LEFT] is not None:
+                obj = colliding_sides[Sides.LEFT].dest
+                self.can_move['left'] = False
+                self._x = obj.right
+                # if self.velocity.x > 0:
+                self.velocity.x = 0
+            else:
+                self.can_move['left'] = True
 
             if colliding_sides[Sides.BOTTOM] is not None:
                 obj = colliding_sides[Sides.BOTTOM].dest
@@ -125,16 +134,20 @@ class Player(Drawable):
                     # print(self.acceleration)
                     self._y = obj.top - self.height + 1
                     self.velocity.y = 0
-                    self.acceleration.y = 0
+                    # self.acceleration.y = 0
             else:
                 self.on_floor = False
                 self.can_move['down'] = True
             
             if colliding_sides[Sides.TOP] is not None:
                 obj = colliding_sides[Sides.TOP].dest
+                self.can_move['up'] = False
                 if self.velocity.y < 0:
                     self.velocity.y = 0
                     self._y = obj.bottom + 1
+            else:
+                self.can_move['up'] = True
+
                         
 
         if self.on_floor:
