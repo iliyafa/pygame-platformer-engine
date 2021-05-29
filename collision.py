@@ -1,5 +1,8 @@
 import pygame
 from enum import Enum, auto
+
+from util import *
+
 pygame.init()
 
 # Game Window Setting:
@@ -13,25 +16,6 @@ GRAVITY = 5000
 
 JUMP_VELOCITY = 1250
 
-MAX_VELOCITY_X = 15000
-MAX_VELOCITY_Y = 15000
-
-# Colors:
-Color = {
-    "Blue"  : [0, 5, 141],
-    "Green" : [40, 255, 0],
-    "Red"   : [255, 15, 0],
-    "Cyan"  : [174, 196, 255],
-}
-# Player = pygame.Rect(30, 30, 60, 60) # Player Rectangle (x on screen, y on screen(Above), x of rect, y of rect)
-
-class Sides(Enum):
-    TOP = auto(),
-    BOTTOM = auto(),
-    LEFT = auto(),
-    RIGHT = auto(),
-    UNKNOWN = auto()
-
 # Obstacles:
 obstacle_descriptors = [
     {'left': 0, 'top': 750, 'width': 1500, 'height': 150},
@@ -39,90 +23,13 @@ obstacle_descriptors = [
     {'left': 550, 'top': 600, 'width': 700, 'height': 50},
     {'left': 850, 'top': 450, 'width': 200, 'height': 50},
 ]
-
-sign = lambda z: int(z/abs(z))
-
-class Vector(object):
-    def __init__(self, x=0, y=0):
-        self._x = x
-        self._y = y
-
-    @property
-    def x(self):
-        return self._x
-
-    @property
-    def y(self):
-        return self._y
-
-    @property
-    def vector(self):
-        return (self.x, self.y)
-
-    @x.setter
-    def x(self, new_x):
-        self._x = new_x
-    
-    @y.setter
-    def y(self, new_y):
-        self._y = new_y
-
-    def __repr__(self):
-        return "<Vector: {}>".format(self.vector)
-
-
-class Drawable(object):
-    def __init__(self, window, color, x, y, width, height):
-        self._window = window
-        self._color = color
-        self._x = x
-        self._y = y
-        self._width = width
-        self._height = height
-    
-    @property
-    def rect(self):
-        return pygame.Rect(self._x, self._y, self._width, self._height)
-
-    @property
-    def left(self):
-        return self._x
-
-    @property
-    def right(self):
-        return self._x + self._width - 1
-
-    @property
-    def width(self):
-        return self._width
-
-    @property
-    def height(self):
-        return self._height
-
-    @property
-    def top(self):
-        return self._y
-
-    @property
-    def bottom(self):
-        return self._y + self._height - 1
-
-    @property
-    def color(self):
-        return self._color
-
-    @property
-    def window(self):
-        return self._window
-
 class Collision(object):
     def __init__(self, source, dest):
         self.source = source
         self.dest = dest
     
     @property
-    def is_colliding(self):
+    def triggered(self):
         return self.source.rect.colliderect(self.dest.rect)
     
     # def lookahead_y(self, dt):
@@ -183,18 +90,25 @@ class Player(Drawable):
         collisions = []
         for obj in ENVIRONMENT:
             collision = Collision(self, obj)
-            if collision.is_colliding:
+            if collision.triggered:
                 collisions.append(collision)
+                obj.is_colliding = True
                 # end = True
                 # self.velocity.y = 0
                 # self.acceleration.y = 0
                 # end = True
                 if obj.is_rigid:
                     self.on_floor = True
-                    obj._color = Color['Green']
                     # print(self.acceleration)
                     self._y = obj.top - self.height + 1
                     self.velocity.y = 0
+            else:
+                obj.is_colliding = False
+            
+            if obj.is_colliding:
+                obj._color = Color['Green']
+            else:
+                obj._color = Color['Blue']
         
         if len(collisions) == 0:
             self.on_floor = False
@@ -204,7 +118,6 @@ class Player(Drawable):
         else:
             self.acceleration.y = GRAVITY
 
-            
         self.draw()
 
     def draw(self):
@@ -215,6 +128,7 @@ class Obstacle(Drawable):
         super().__init__(window, color, left, top, width, height)
         self._velocity = Vector(0,0)
         self._is_rigid = is_rigid
+        self.is_colliding = False
 
     @property
     def velocity(self):
