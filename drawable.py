@@ -1,4 +1,5 @@
 import pygame
+from util import Vector
 
 class Drawable(object):
     def __init__(self, window, color, x, y, width, height):
@@ -10,9 +11,17 @@ class Drawable(object):
         self._height = height
     
     @property
+    def vector(self):
+        return Vector(self._x, self._y)
+    
+    @property
     def rect(self):
         return pygame.Rect(self._x, self._y, self._width, self._height)
-
+    
+    @property
+    def center(self):
+        return Vector(*self.rect.center)
+    
     @property
     def left(self):
         return self._x

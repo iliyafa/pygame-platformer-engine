@@ -18,6 +18,8 @@ GRAVITY = 5000
 
 JUMP_VELOCITY = 1250
 
+BORDER_WIDTH = 6
+
 # Obstacles:
 obstacle_descriptors = [
     {'left': 0, 'top': 750, 'width': 1500, 'height': 150},
@@ -34,6 +36,12 @@ class Player(Drawable):
         self._acceleration = Vector(0, GRAVITY)
         self.is_jump = False
         self.on_floor = False
+        self.can_move = {
+            "left": True,
+            "right": True,
+            "up": True,
+            "down": True
+        }
 
     @property
     def velocity(self):
@@ -47,43 +55,48 @@ class Player(Drawable):
         self._velocity.x = 0
         keys = pygame.key.get_pressed()
         if (keys[pygame.K_LEFT] or keys[pygame.K_a]):
-            if self.left > 0:
+            if self.can_move['left'] and self.left >= BORDER_WIDTH:
                 self.velocity.x = -VELOCITY_X
         if (keys[pygame.K_RIGHT] or keys[pygame.K_d]):
-            if self.right < window.get_width():
+            if self.can_move['right'] and self.right <= window.get_width() - BORDER_WIDTH:
                 self.velocity.x = VELOCITY_X
         if keys[pygame.K_SPACE]:
-            if self.on_floor:
+            if self.on_floor and self.can_move['up']:
                 self.on_floor = False
                 self.velocity.y -= JUMP_VELOCITY
         
     def update(self, dt):
         global end
         self.move(dt)
-        self.velocity.y += self._acceleration.y*dt
-        self._y += self.velocity.y*dt
+        
         self.velocity.x += self._acceleration.x*dt
+        self.velocity.y += self._acceleration.y*dt
         self._x += self.velocity.x*dt
+        self._y += self.velocity.y*dt
 
+        # if self.top > 0 and self.bottom < self.window.get_height():
+        #     self._y += self.velocity.y*dt
+        # else:
+        #     self._y = 0 if self._y < 0 else self.window.get_height() - self.height - 1
+        
+        # if self.left > 0 and self.right < self.window.get_width():
+        #     self._x += self.velocity.x*dt
+        # else:
+        #     self._x = 0 if self._x < 0 else self.window.get_width() - self.width + 1
+        
         collisions = []
+        colliding_sides = {
+            Sides.BOTTOM: None,
+            Sides.TOP: None,
+            Sides.LEFT: None,
+            Sides.RIGHT: None,
+        }
         for obj in ENVIRONMENT:
             collision = Collision(self, obj)
             if collision.triggered:
-                collisions.append(collision)
                 obj.is_colliding = True
-                # end = True
-                # self.velocity.y = 0
-                # self.acceleration.y = 0
-                # end = True
-                if obj.is_rigid:
-                    if self.velocity.y > 0:
-                        self.on_floor = True
-                        # print(self.acceleration)
-                        self._y = obj.top - self.height + 1
-                        self.velocity.y = 0
-                    elif self.velocity.y < 0:
-                        self.velocity.y = 0
-                        self._y = obj.bottom + 1
+                collisions.append(collision)
+                colliding_sides[collision.determine_side()] = collision
             else:
                 obj.is_colliding = False
             
@@ -94,12 +107,41 @@ class Player(Drawable):
         
         if len(collisions) == 0:
             self.on_floor = False
-        
+        else:
+            if colliding_sides[Sides.RIGHT] is not None:
+                obj = colliding_sides[Sides.RIGHT].dest
+                self.can_move['right'] = False
+                self._x = obj.left - self.width
+                if self.velocity.x > 0:
+                    self.velocity.x = 0
+            else:
+                self.can_move['right'] = True
+
+            if colliding_sides[Sides.BOTTOM] is not None:
+                obj = colliding_sides[Sides.BOTTOM].dest
+                if self.velocity.y > 0:
+                    self.on_floor = True
+                    self.can_move['down'] = False
+                    # print(self.acceleration)
+                    self._y = obj.top - self.height + 1
+                    self.velocity.y = 0
+                    self.acceleration.y = 0
+            else:
+                self.on_floor = False
+                self.can_move['down'] = True
+            
+            if colliding_sides[Sides.TOP] is not None:
+                obj = colliding_sides[Sides.TOP].dest
+                if self.velocity.y < 0:
+                    self.velocity.y = 0
+                    self._y = obj.bottom + 1
+                        
+
         if self.on_floor:
             self.acceleration.y = 0
         else:
             self.acceleration.y = GRAVITY
-
+        
         self.draw()
 
     def draw(self):
