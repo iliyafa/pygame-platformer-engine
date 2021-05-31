@@ -1,9 +1,11 @@
+from bullet import Bullet
 import pygame
 
-from consts import Sides, Color
+from consts import Direction, Sides, Color
 from util import *
 from drawable import Drawable
 from collision import Collision
+from bullet import Bullet
 
 pygame.init()
 
@@ -42,6 +44,7 @@ class Player(Drawable):
             "up": True,
             "down": True
         }
+        self.direction = Direction.LEFT
 
     @property
     def velocity(self):
@@ -55,15 +58,23 @@ class Player(Drawable):
         self._velocity.x = 0
         keys = pygame.key.get_pressed()
         if (keys[pygame.K_LEFT] or keys[pygame.K_a]):
+            self.direction = Direction.LEFT
             if self.can_move['left'] and self.left >= BORDER_WIDTH:
                 self.velocity.x = -VELOCITY_X
         if (keys[pygame.K_RIGHT] or keys[pygame.K_d]):
+            self.direction = Direction.RIGHT
             if self.can_move['right'] and self.right <= window.get_width() - BORDER_WIDTH:
                 self.velocity.x = VELOCITY_X
         if keys[pygame.K_SPACE]:
             if self.on_floor and self.can_move['up']:
                 self.on_floor = False
                 self.velocity.y -= JUMP_VELOCITY
+        if keys[pygame.K_f]:
+            if len(bullets) < 11:
+                bullets.append(Bullet(
+                    (255,255,0),
+                    self
+                ))
         
     def update(self, dt):
         global end
@@ -190,12 +201,15 @@ class Obstacle(Drawable):
 
 player = Player(window, Color['Red'], 530, 50, 60, 60)
 obstacles = [Obstacle(window, Color['Blue'], **desc) for desc in obstacle_descriptors]
+bullets = []
 ENVIRONMENT = obstacles
 
 def redrawGameWindow(dt):
     window.fill(0)
     for obj in ENVIRONMENT:
         obj.update(dt)
+    for bullet in bullets:
+        bullet.update(dt)
     player.update(dt)
     pygame.display.update()
 

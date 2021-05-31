@@ -5,7 +5,9 @@ from drawable import Drawable
 class Movable(Drawable):
     def __init__(self, window, color, x, y, width, height, velocity=Vector(0,0), acceleration=Vector(0,0)):
         super().__init__(window, color, x, y, width, height)
-        
+        self._velocity = None
+        self._acceleration = None
+
         if velocity is not None:
             assert isinstance(velocity, Vector), "Velocity must be a Vector"
             self._velocity = velocity
@@ -17,6 +19,10 @@ class Movable(Drawable):
     @property
     def velocity(self):
         return self._velocity
+    
+    @property
+    def acceleration(self):
+        return self._acceleration
 
     ### Setting individual axes can (and should) be done via `obj.(velocity|acceleration).(x|y) = {new_val}`
     @velocity.setter

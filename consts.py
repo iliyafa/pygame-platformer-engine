@@ -14,3 +14,8 @@ class Sides(Enum):
     LEFT = auto(),
     RIGHT = auto(),
     UNKNOWN = auto()
+
+
+class Direction(Enum):
+    LEFT = -1
+    RIGHT = 1

@@ -11,6 +11,14 @@ class Drawable(object):
         self._height = height
     
     @property
+    def x(self):
+        return self._x
+    
+    @property
+    def y(self):
+        return self._y
+    
+    @property
     def vector(self):
         return Vector(self._x, self._y)
     
@@ -53,3 +61,6 @@ class Drawable(object):
     @property
     def window(self):
         return self._window
+
+    def draw():
+        pass
