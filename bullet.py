@@ -21,9 +21,13 @@ class Bullet(Movable):
         super().__init__(character.window, color, x, y, width, height, velocity=Vector(velocity_x, 0))
         self._visible = True
     
+    @property
+    def visible(self):
+        return self._visible
+
     def move(self):
         if self.right > self.window.get_width() or self.left < 0:
-            self.visible = False
+            self._visible = False
 
     def draw(self):
         if self._visible:
@@ -34,6 +38,7 @@ class Bullet(Movable):
         print(self._x)
         print(self._character.direction)
         print(dt)
+
         self._x += self.velocity.x * dt
         self.draw()
 

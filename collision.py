@@ -1,4 +1,4 @@
-from util import sign
+from util import sign, Vector
 from consts import Sides
 
 TOLERANCE = 20
@@ -16,14 +16,16 @@ class Collision(object):
     @property
     def collision_vector(self):
         return self._collision_vector
-    
-    # def lookahead_y(self, dt):
-    #     if self.source.right >= self.dest.left and self.source.left < self.dest.left or self.source.left <= self.dest.right and self.source.right > self.dest.right:
-    #         # print((self.dest.top - (self.source.bottom + self.source.velocity.y*dt + self.source.acceleration.y*dt**2)))
-    #         return abs(self.dest.top - (self.source.bottom + self.source.velocity.y*dt + self.source.acceleration.y*dt**2)) < epsilon
-    #     return False
 
-    def determine_side(self):
+    def determine_side(self, dt):
+        # vel_x = self.source.velocity.x
+        # lookahead = vel_x * dt
+
+        # # Right:
+        # for x in range(self.source.right.x, int(lookahead)):
+        #     if self.dest.rect.collidepoint(Vector(x, self.source.right.y)):
+        #         return Sides.RIGHT
+
         if (self.source.bottom - self.dest.top) < self.dest.height/2:
             return Sides.BOTTOM
         elif (self.dest.bottom - self.source.top) < self.dest.height/2:

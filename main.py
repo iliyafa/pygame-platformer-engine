@@ -54,7 +54,7 @@ class Player(Drawable):
     def acceleration(self):
         return self._acceleration
 
-    def move(self, dt):
+    def move(self, dt, pressed_key):
         self._velocity.x = 0
         keys = pygame.key.get_pressed()
         if (keys[pygame.K_LEFT] or keys[pygame.K_a]):
@@ -65,20 +65,26 @@ class Player(Drawable):
             self.direction = Direction.RIGHT
             if self.can_move['right'] and self.right <= window.get_width() - BORDER_WIDTH:
                 self.velocity.x = VELOCITY_X
-        if keys[pygame.K_SPACE]:
+        
+        if pressed_key == pygame.K_SPACE:
             if self.on_floor and self.can_move['up']:
                 self.on_floor = False
                 self.velocity.y -= JUMP_VELOCITY
-        if keys[pygame.K_f]:
-            if len(bullets) < 11:
+        
+        if pressed_key == pygame.K_f:
+            count = 0
+            for b in bullets:
+                if b.visible:
+                    count += 1
+            if count < 11:
                 bullets.append(Bullet(
                     (255,255,0),
                     self
                 ))
         
-    def update(self, dt):
+    def update(self, dt, pressed_key):
         global end
-        self.move(dt)
+        self.move(dt, pressed_key)
         
         self.velocity.x += self._acceleration.x*dt
         self.velocity.y += self._acceleration.y*dt
@@ -107,7 +113,7 @@ class Player(Drawable):
             if collision.triggered:
                 obj.is_colliding = True
                 collisions.append(collision)
-                colliding_sides[collision.determine_side()] = collision
+                colliding_sides[collision.determine_side(dt)] = collision
             else:
                 obj.is_colliding = False
             
@@ -122,8 +128,8 @@ class Player(Drawable):
             if colliding_sides[Sides.RIGHT] is not None:
                 obj = colliding_sides[Sides.RIGHT].dest
                 self.can_move['right'] = False
-                self._x = obj.left - self.width + 1
                 # if self.velocity.x > 0:
+                self._x = obj.left - self.width + 1
                 self.velocity.x = 0
             else:
                 self.can_move['right'] = True
@@ -204,13 +210,23 @@ obstacles = [Obstacle(window, Color['Blue'], **desc) for desc in obstacle_descri
 bullets = []
 ENVIRONMENT = obstacles
 
-def redrawGameWindow(dt):
+def redrawGameWindow(dt, pressed_key):
+    global bullets
     window.fill(0)
     for obj in ENVIRONMENT:
         obj.update(dt)
     for bullet in bullets:
         bullet.update(dt)
-    player.update(dt)
+    
+    count_visible = 0
+    for bullet in bullets:
+        if bullet.visible:
+            count_visible += 1
+
+    if count_visible == 0:
+        bullets = []
+
+    player.update(dt, pressed_key)
     pygame.display.update()
 
 clock = pygame.time.Clock()
@@ -219,15 +235,18 @@ dt = 0.0
 end = False
 
 while not end:
+    pressed_key = None
     keys = pygame.key.get_pressed()
     if keys[pygame.K_ESCAPE]:
         end = True
 
     for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            pressed_key = event.key
         if event.type == pygame.QUIT:
             end = True
 
-    redrawGameWindow(dt)
+    redrawGameWindow(dt, pressed_key)
     dt = clock.tick(FPS)/1000.0
 
 pygame.quit()
