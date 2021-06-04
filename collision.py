@@ -1,4 +1,5 @@
-from util import sign, Vector
+import pygame
+from util import sign
 from consts import Sides
 
 TOLERANCE = 20
@@ -22,8 +23,10 @@ class Collision(object):
         # lookahead = vel_x * dt
 
         # # Right:
-        # for x in range(self.source.right.x, int(lookahead)):
-        #     if self.dest.rect.collidepoint(Vector(x, self.source.right.y)):
+        # for x in range(int(self.source.right), int(self.source.right+lookahead)):
+        #     pygame.draw.line(self.source.window, (255,255,0), (self.source.right, self.source.y), (self.source.right+lookahead, self.source.y), 2)
+        #     if self.dest.rect.collidepoint(x, self.source.y):
+        #         print("wut")
         #         return Sides.RIGHT
 
         if (self.source.bottom - self.dest.top) < self.dest.height/2:

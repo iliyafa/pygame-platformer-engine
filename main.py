@@ -1,4 +1,4 @@
-from bullet import Bullet
+import os
 import pygame
 
 from consts import Direction, Sides, Color
@@ -6,11 +6,15 @@ from util import *
 from drawable import Drawable
 from collision import Collision
 from bullet import Bullet
+from camera import Camera
 
 pygame.init()
 
 # Game Window Setting:
-window = pygame.display.set_mode((1500, 900))
+DISPLAY_X = 1500
+DISPLAY_Y = 900
+window = pygame.display.set_mode((DISPLAY_X, DISPLAY_Y))
+bg = pygame.image.load(os.path.join('img', 'city-skyline2.png')).convert_alpha()
 
 # epsilon = 1
 
@@ -24,7 +28,7 @@ BORDER_WIDTH = 6
 
 # Obstacles:
 obstacle_descriptors = [
-    {'left': 0, 'top': 750, 'width': 1500, 'height': 150},
+    {'left': 0, 'top': 750, 'width': 6500, 'height': 150},
     {'left': 400, 'top': 650, 'width': 100, 'height': 100},
     {'left': 550, 'top': 600, 'width': 700, 'height': 50},
     {'left': 850, 'top': 450, 'width': 200, 'height': 50},
@@ -57,11 +61,11 @@ class Player(Drawable):
     def move(self, dt, pressed_key):
         self._velocity.x = 0
         keys = pygame.key.get_pressed()
-        if (keys[pygame.K_LEFT] or keys[pygame.K_a]):
+        if (keys[pygame.K_LEFT]):
             self.direction = Direction.LEFT
             if self.can_move['left'] and self.left >= BORDER_WIDTH:
                 self.velocity.x = -VELOCITY_X
-        if (keys[pygame.K_RIGHT] or keys[pygame.K_d]):
+        if (keys[pygame.K_RIGHT]):
             self.direction = Direction.RIGHT
             if self.can_move['right'] and self.right <= window.get_width() - BORDER_WIDTH:
                 self.velocity.x = VELOCITY_X
@@ -71,7 +75,7 @@ class Player(Drawable):
                 self.on_floor = False
                 self.velocity.y -= JUMP_VELOCITY
         
-        if pressed_key == pygame.K_f:
+        elif pressed_key == pygame.K_f:
             count = 0
             for b in bullets:
                 if b.visible:
@@ -82,7 +86,13 @@ class Player(Drawable):
                     self
                 ))
         
-    def update(self, dt, pressed_key):
+        elif pressed_key == pygame.K_LCTRL:
+            if self.can_move['right'] and self.right <= window.get_width() - BORDER_WIDTH:
+                self.velocity.x += Direction.RIGHT * VELOCITY_X * 20
+            if self.can_move['right'] and self.right <= window.get_width() - BORDER_WIDTH:
+                self.velocity.x += Direction.LEFT * VELOCITY_X * 20
+        
+    def update(self, dt, camera, pressed_key):
         global end
         self.move(dt, pressed_key)
         
@@ -172,21 +182,28 @@ class Player(Drawable):
         else:
             self.acceleration.y = GRAVITY
         
-        self.draw()
+        self.draw(camera)
 
-    def draw(self):
-        pygame.draw.rect(self.window, self.color, self.rect, 6, 1)
+    def draw(self, camera):
+        pygame.draw.rect(
+            self.window,
+            self.color,
+            # self.rect,
+            pygame.Rect(self._x + camera.x, self._y + camera.y, self._width, self._height),
+            6,
+            1
+        )
 
 class Obstacle(Drawable):
     def __init__(self, window, color, left, top, width, height, is_rigid=True):
         super().__init__(window, color, left, top, width, height)
         self._is_rigid = is_rigid
-        self._static_rect = pygame.Rect(self._x, self._y, self._width, self._height)
+        # self._static_rect = pygame.Rect(self._x, self._y, self._width, self._height)
         self.is_colliding = False
 
-    @property
-    def rect(self):
-        return self._static_rect
+    # @property
+    # def rect(self):
+    #     return self._static_rect
     
     @property
     def velocity(self):
@@ -199,24 +216,38 @@ class Obstacle(Drawable):
     def set_color(self, color):
         self._color = color
 
-    def update(self, dt):
-        self.draw()
+    def update(self, dt, camera):
+        self.draw(camera)
 
-    def draw(self):
-        pygame.draw.rect(self.window, self.color, self.rect)
+    def draw(self, camera):
+        pygame.draw.rect(
+            self.window,
+            self.color,
+            pygame.Rect(self._x + camera.x, self._y + camera.y, self._width, self._height)
+        )
 
 player = Player(window, Color['Red'], 530, 50, 60, 60)
 obstacles = [Obstacle(window, Color['Blue'], **desc) for desc in obstacle_descriptors]
 bullets = []
 ENVIRONMENT = obstacles
+GAME_OBJECTS = [player] + bullets + ENVIRONMENT
+
+CAMERA = Camera(window)
 
 def redrawGameWindow(dt, pressed_key):
     global bullets
-    window.fill(0)
+    window.fill((15,15,25))
+    window.blit(bg, (CAMERA.x, 750-bg.get_height()))
+    
+    CAMERA.update()
+    CAMERA.display()
+    
+    # for obj in GAME_OBJECTS:
+    #     obj.update_camera(CAMERA)
     for obj in ENVIRONMENT:
-        obj.update(dt)
+        obj.update(dt, CAMERA)
     for bullet in bullets:
-        bullet.update(dt)
+        bullet.update(dt, CAMERA)
     
     count_visible = 0
     for bullet in bullets:
@@ -226,7 +257,7 @@ def redrawGameWindow(dt, pressed_key):
     if count_visible == 0:
         bullets = []
 
-    player.update(dt, pressed_key)
+    player.update(dt, CAMERA, pressed_key)
     pygame.display.update()
 
 clock = pygame.time.Clock()

@@ -62,5 +62,12 @@ class Drawable(object):
     def window(self):
         return self._window
 
-    def draw():
+    def draw(self, camera):
         pass
+
+    def update(self, dt, camera):
+        pass
+
+    # def update_camera(self, camera):
+    #     self._x += camera.left_edge
+    #     self._y += camera.top_edge
