@@ -239,7 +239,7 @@ def redrawGameWindow(dt, pressed_key):
     window.fill((15,15,25))
     window.blit(bg, (CAMERA.x, 750-bg.get_height()))
     
-    CAMERA.update()
+    CAMERA.update(dt, player)
     CAMERA.display()
     
     # for obj in GAME_OBJECTS:

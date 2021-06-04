@@ -67,11 +67,13 @@ class Camera(object):
 
     def pan(self, movement_vector):
         assert isinstance(movement_vector, Vector)
-        self._position += movement_vector
+        self._position -= movement_vector
     
-    def update(self):
+    def update(self, dt, player):
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_a] and self.x < 0:
-            self.pan(Vector(CAMERA_STEP, 0))
-        if keys[pygame.K_d]:
-            self.pan(Vector(-CAMERA_STEP, 0))
+        if player.x > self.center.x:
+            self.pan(Vector(player.velocity.x*dt, 0))
+        # if keys[pygame.K_a]:
+        #     self.pan(Vector(-CAMERA_STEP, 0))
+        # if keys[pygame.K_d]:
+        #     self.pan(Vector(CAMERA_STEP, 0))
